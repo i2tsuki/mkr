@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
 	"text/template"
 	"time"
 
-	"github.com/Songmu/prompter"
 	mkr "github.com/mackerelio/mackerel-client-go"
 	"github.com/mackerelio/mkr/logger"
 	"github.com/mackerelio/mkr/plugin"
@@ -470,9 +470,21 @@ func doRetire(c *cli.Context) error {
 		}
 	}
 
-	if !force && !prompter.YN("Retire following hosts.\n  "+strings.Join(argHostIDs, "\n  ")+"\nAre you sure?", true) {
-		logger.Log("", "retirement is canceled.")
-		return nil
+	if !force {
+		fmt.Print("Retire following hosts.\n  " + strings.Join(argHostIDs, "\n  ") + "\nAre you sure? [Y/n]: ")
+		input := ""
+		scanner := bufio.NewScanner(os.Stdin)
+		ok := scanner.Scan()
+		if ok {
+			input = strings.TrimRight(scanner.Text(), "\r\n")
+		}
+		if input == "" {
+			input = "y"
+		}
+		if strings.ToLower(input) != "y" {
+			logger.Log("", "retirement is canceled.")
+			return nil
+		}
 	}
 
 	client := newMackerelFromContext(c)
